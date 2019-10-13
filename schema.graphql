@@ -1,0 +1,50 @@
+type Mutation {
+    createIdea(
+        Idea: String!,
+        created_at: String!
+    ): Idea!
+}
+
+type Query {
+    # search functionality is available in elasticsearch integration
+    searchAllIdearsByTag(tags: [String!]!): IdearsConnection
+}
+
+type Subscription {
+    addIdea: Idea
+    @aws_subscribe(mutations: ["createIdea"])
+}
+
+type Idea {
+    idea_id: String!
+    img_link: String
+    upvote_count: Int
+    idea: String!
+    created_at: String!
+}
+
+type IdeaCollection {
+    user_id: String!
+    name: String!
+    idears: [String!]!
+    created_at: String!
+}
+
+type IdearsConnection {
+    items: [Idea!]!
+    nextToken: String
+}
+
+type User {
+    name: String!
+    user_name: String!
+    received_upvotes: Int!
+    description: String!
+    idears(limit: Int!, nextToken: String): IdearsConnection
+}
+
+schema {
+    query: Query
+    mutation: Mutation
+    subscription: Subscription
+}
