@@ -1,0 +1,18 @@
+{
+  "version" : "2017-02-28",
+  "operation" : "Scan",
+  "select": "ALL_ATTRIBUTES",
+  "filter": {
+    "expression": "contains(#tags, :tag)",
+    "expressionNames" : {
+      "#tags" : "tags"
+    },
+    "expressionValues": {
+      ":tag": {
+        "S": "${context.arguments.tag}"
+      }
+    }
+  },
+  "limit": #if($context.arguments.limit) $context.arguments.limit #else 10 #end,
+  "nextToken": #if($context.arguments.nextToken) "$context.arguments.nextToken" #else null #end
+}

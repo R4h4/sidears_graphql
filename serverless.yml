@@ -6,9 +6,9 @@ frameworkVersion: ">=1.21.0 <2.0.0"
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: python3.7
   stage: dev
-  region: ap-southeast-1
+  region: us-west-2  # cosing US West (Oregon), because DataAPI for Aurora Serverless is not available in Singapore
   tags:
     project: sidears
     service: ${self:service}
@@ -36,22 +36,49 @@ custom:
     seed:
       test:
         source:
-          - table: IdeaCollections
-            source: [seed-data/IdeaCollections.json]
-          - table: Idears
-            source: [seed-data/Idears.json]
+          - table: Ideas
+            source: [seed-data/Ideas.json]
 
   appSync:
-    name: dynamodbGraphQL
-    authentication: AMAZON_COGNITO_USER_POOLS
+    name: sidearsGraphQL
+    serviceRole: ${self:app}-${self:provider.stage}-${self:service}-serviceRole
+    authenticationType: AMAZON_COGNITO_USER_POOLS
     userPoolConfig:
-      awsRegion: ap-southeast-1
+      awsRegion: ${self:provider.region}
       defaultAction: ALLOW
       userPoolId: ap-southeast-1_8DPdGUugz # sidears-dev
     mappingTemplates:
+      # --- Idea fields ---
+      - dataSource: Ideas
+        type: Query
+        field: getIdea
+      - dataSource: Ideas
+        type: Query
+        field: listIdeasByTags
+      - dataSource: Ideas
+        type: Mutation
+        field: createIdea
+      # --- Upvote fields ---
+      - dataSource: Upvotes
+        type: Query
+        field: listUpvotesByUser
+      - dataSource: Upvotes
+        type: Mutation
+        field: upvoteIdea
+      # --- Collection fields ---
       - dataSource: IdeaCollections
         type: Query
-        field: getUserCollections
+        field: getCollection
+      - dataSource: IdeaCollections
+        type: Query
+        field: listCollectionsByUser
+      - dataSource: IdeaCollections
+        type: Mutation
+        field: createCollection
+      - dataSource: IdeaCollections
+        type: Mutation
+        field: addIdeaToCollection
+      # --- User fields
       - dataSource: UserInfo
         type: Query
         field: getUserInfo
@@ -60,50 +87,87 @@ custom:
         name: IdeaCollections
         description: 'Table for Users Idea Collection'
         config:
-          tableName: 'IdeaCollections'
+          tableName: 'sidears-IdeaCollections'
           iamRoleStatements:
             - Effect: "Allow"
               Action:
+                - "dynamodb:GetItem"
                 - "dynamodb:Query"
+                - "dynamodb:putItem"
                 - "dynamodb:UpdateItem"
               Resource:
-                - "arn:aws:dynamodb:${self:provider.region}:*:table/IdeaCollections"
-                - "arn:aws:dynamodb:${self:provider.region}:*:table/IdeaCollections/*"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-IdeaCollections"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-IdeaCollections/*"
       - type: AMAZON_DYNAMODB
         name: UserInfo
         description: 'Table for Users Information'
         config:
-          tableName: 'UserInfo'
+          tableName: 'sidears-UserInfo'
           iamRoleStatements:
             - Effect: "Allow"
               Action:
+                - "dynamodb:GetItem"
                 - "dynamodb:Query"
+                - "dynamodb:putItem"
                 - "dynamodb:UpdateItem"
               Resource:
-                - "arn:aws:dynamodb:${self:provider.region}:*:table/UserInfo"
-                - "arn:aws:dynamodb:${self:provider.region}:*:table/UserInfo/*"
-      - type: RELATIONAL_DATABASE
-        name: Idears
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-UserInfo"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-UserInfo/*"
+      - type: AMAZON_DYNAMODB
+        name: Ideas
+        description: 'Table for ideas'
         config:
-          dbClusterIdentifier: { Ref: RDSCluster }
-          awsSecretStoreArn: { Ref: RDSClusterSecret }
-          databaseName: sidears
-          schema: mysql
+          tableName: 'sidears-Ideas'
           iamRoleStatements:
             - Effect: "Allow"
               Action:
-                - "rds-data:DeleteItems"
-                - "rds-data:ExecuteSql"
-                - "rds-data:GetItems"
-                - "rds-data:InsertItems"
-                - "rds-data:UpdateItems"
+                - "dynamodb:GetItem"
+                - "dynamodb:Query"
+                - "dynamodb:putItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:BatchGetItem"
+                - "dynamodb:Scan"
               Resource:
-                - "arn:aws:rds:{REGION}:{ACCOUNT_ID}:cluster:database-sidears-1"
-                - "arn:aws:rds:{REGION}:{ACCOUNT_ID}:cluster:database-sidears-1:*"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-Ideas"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-Ideas/*"
+      - type: AMAZON_DYNAMODB
+        name: Upvotes
+        description: 'Table for Upvotes'
+        config:
+          tableName: 'sidears-Upvotes'
+          iamRoleStatements:
             - Effect: "Allow"
               Action:
-                - "secretsmanager:GetSecretValue"
+                - "dynamodb:GetItem"
+                - "dynamodb:Query"
+                - "dynamodb:putItem"
+                - "dynamodb:UpdateItem"
               Resource:
-                - "arn:aws:secretsmanager:{REGION}:{ACCOUNT_ID}:secret:dev/RDS/sidears"
-                - "arn:aws:secretsmanager:{REGION}:{ACCOUNT_ID}:secret:dev/RDS/sidears:*"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-Upvotes"
+                - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-Upvotes/*"
+# ---- Data API for Aurora Serverless is no yet available in Singapore
+#      - type: RELATIONAL_DATABASE
+#        name: Idears
+#        config:
+#          dbClusterIdentifier: 'database-sidears-1'
+#          awsSecretStoreArn: 'arn:aws:secretsmanager:${self:provider.region}:*:secret:dev/RDS/sidears-t3cMfv'
+#          databaseName: sidears
+#          schema: mysql
+#          iamRoleStatements:
+#            - Effect: "Allow"
+#              Action:
+#                - "rds-data:DeleteItems"
+#                - "rds-data:ExecuteSql"
+#                - "rds-data:GetItems"
+#                - "rds-data:InsertItems"
+#                - "rds-data:UpdateItems"
+#              Resource:
+#                - "arn:aws:rds:${self:provider.region}:*:cluster:database-sidears-1"
+#                - "arn:aws:rds:${self:provider.region}:*:cluster:database-sidears-1:*"
+#            - Effect: "Allow"
+#              Action:
+#                - "secretsmanager:GetSecretValue"
+#              Resource:
+#                - "arn:aws:secretsmanager:${self:provider.region}:*:secret:dev/RDS/sidears"
+#                - "arn:aws:secretsmanager:${self:provider.region}:*:secret:dev/RDS/sidears:*"
 

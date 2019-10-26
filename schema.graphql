@@ -1,50 +1,103 @@
+# ------ AppSync Type Definitions -------
+
+# ------ Query - Operations ------
+type Query {
+    # --- Idea Queries ---
+    getIdea(idea_id: ID!): Idea
+    listIdeasByTags(tags: [String!]!): IdeasConnection
+
+    # --- Collection Queries ---
+    getCollection(collection_id: ID!): IdeaCollection
+    listCollectionsByUser(username: String!): CollectionConnection
+
+    # --- UserInfo Queries ---
+    getUserInfo(username: String!): User
+
+    # --- Upvote Queries ---
+    listUpvotesByUser(username: String!): UpvoteConnection
+}
+
+# ------ Mutations - Operations ------
 type Mutation {
     createIdea(
-        Idea: String!,
+        idea: String!
         created_at: String!
     ): Idea!
+
+    createCollection(
+        collection_id: ID!
+        collection_name: String!
+    ): IdeaCollection!
+
+    addIdeaToCollection(
+        idea_id: ID!
+        collection_id: ID!
+    ): Idea!
+
+    upvoteIdea(
+        idea_id: ID!
+    ): Idea!
+
 }
 
-type Query {
-    # search functionality is available in elasticsearch integration
-    searchAllIdearsByTag(tags: [String!]!): IdearsConnection
-}
-
+# ------ Subsscriptions - Operations ------
 type Subscription {
     addIdea: Idea
     @aws_subscribe(mutations: ["createIdea"])
 }
 
-type Idea {
-    idea_id: String!
-    img_link: String
-    upvote_count: Int
-    idea: String!
-    created_at: String!
-}
-
-type IdeaCollection {
-    user_id: String!
-    name: String!
-    idears: [String!]!
-    created_at: String!
-}
-
-type IdearsConnection {
+# ------ Connections ------
+type IdeasConnection {
     items: [Idea!]!
     nextToken: String
 }
 
-type User {
-    name: String!
-    user_name: String!
-    received_upvotes: Int!
-    description: String!
-    idears(limit: Int!, nextToken: String): IdearsConnection
+type CollectionConnection {
+    items: [CollectionConnection!]!
+    nextToken: String
 }
 
+type UpvoteConnection {
+    items: [Upvote!]!
+    nextToken: String
+}
+
+# ------ Tyoe definitions -------
+type Idea {
+    idea_id: ID!
+    idea: String!
+    img_link: String
+    upvote_count: Int
+    created_at: String!
+}
+
+type IdeaCollection {
+    collection_id: ID!
+    username: String!
+    name: String
+    description: String
+    idears: IdeasConnection
+    created_at: String
+}
+
+type User {
+    name: String!
+    username: String!
+    received_upvotes: Int!
+    description: String!
+    idears(limit: Int!, nextToken: String): IdeasConnection
+}
+
+type Upvote {
+    user: User!
+    timestamp: AWSTimestamp
+    idea: Idea
+}
+
+# ------ Schema definition -------
 schema {
     query: Query
     mutation: Mutation
     subscription: Subscription
 }
+

@@ -1,0 +1,14 @@
+{
+  "version" : "2017-02-28",
+  "operation" : "PutItem",
+  "key" : {
+    "idea_id" : { "S" : "$util.autoId()" },
+    "created_at" : { "S" : "${context.identity.username}" },
+  },
+  "attributeValues" : {
+    "username": {"S": "${context.identity.username}"},
+    "idea" : { "S" : "${context.arguments.idea}" },
+    "img_link": { "S" : "" },
+    "upvote_count": { "N" : 0}
+  }
+}
