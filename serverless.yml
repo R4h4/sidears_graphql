@@ -145,29 +145,27 @@ custom:
               Resource:
                 - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-Upvotes"
                 - "arn:aws:dynamodb:${self:provider.region}:*:table/sidears-Upvotes/*"
-# ---- Data API for Aurora Serverless is no yet available in Singapore
-#      - type: RELATIONAL_DATABASE
-#        name: Idears
-#        config:
-#          dbClusterIdentifier: 'database-sidears-1'
-#          awsSecretStoreArn: 'arn:aws:secretsmanager:${self:provider.region}:*:secret:dev/RDS/sidears-t3cMfv'
-#          databaseName: sidears
-#          schema: mysql
-#          iamRoleStatements:
-#            - Effect: "Allow"
-#              Action:
-#                - "rds-data:DeleteItems"
-#                - "rds-data:ExecuteSql"
-#                - "rds-data:GetItems"
-#                - "rds-data:InsertItems"
-#                - "rds-data:UpdateItems"
-#              Resource:
-#                - "arn:aws:rds:${self:provider.region}:*:cluster:database-sidears-1"
-#                - "arn:aws:rds:${self:provider.region}:*:cluster:database-sidears-1:*"
-#            - Effect: "Allow"
-#              Action:
-#                - "secretsmanager:GetSecretValue"
-#              Resource:
-#                - "arn:aws:secretsmanager:${self:provider.region}:*:secret:dev/RDS/sidears"
-#                - "arn:aws:secretsmanager:${self:provider.region}:*:secret:dev/RDS/sidears:*"
-
+      - type: RELATIONAL_DATABASE
+        name: Ideas
+        config:
+          dbClusterIdentifier: 'projects-db-cluster'
+          awsSecretStoreArn: 'arn:aws:secretsmanager:${self:provider.region}:*:secret:RDS/projects/admin-v2uC52'
+          databaseName: sidears
+          schema: mysql
+          iamRoleStatements:
+            - Effect: "Allow"
+              Action:
+                - "rds-data:DeleteItems"
+                - "rds-data:ExecuteSql"
+                - "rds-data:GetItems"
+                - "rds-data:InsertItems"
+                - "rds-data:UpdateItems"
+              Resource:
+                - "arn:aws:rds:${self:provider.region}:*:cluster:projects-db-cluster"
+                - "arn:aws:rds:${self:provider.region}:*:cluster:projects-db-cluster:*"
+            - Effect: "Allow"
+              Action:
+                - "secretsmanager:GetSecretValue"
+              Resource:
+                - "arn:aws:secretsmanager:${self:provider.region}:*:secret:RDS/projects/admin-v2uC52"
+                - "arn:aws:secretsmanager:${self:provider.region}:*:secret:RDS/projects/admin-v2uC52:*"
