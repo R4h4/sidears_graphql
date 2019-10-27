@@ -67,6 +67,7 @@ type Idea {
     idea_id: ID!
     idea: String!
     img_link: String
+    tags: [String]!
     upvote_count: Int
     created_at: String!
 }

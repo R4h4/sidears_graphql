@@ -7,8 +7,7 @@
   },
   "attributeValues" : {
     "username": {"S": "${context.identity.username}"},
-    "idea" : { "S" : "${context.arguments.idea}" },
-    "img_link": { "S" : "${context.arguments.img_link}" },
-    "upvote_count": { "N" : 0}
+    "idea_id" : { "S" : "${context.arguments.idea_id}" },
+    "timestamp": { "N" : "${context.arguments.timestamp}" }
   }
 }
